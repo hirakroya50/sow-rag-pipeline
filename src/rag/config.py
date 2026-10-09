@@ -24,3 +24,11 @@ class Settings:
     embedding_model: str = os.getenv("RAG_EMBEDDING_MODEL", "all-MiniLM-L6-v2")
     chunk_size: int = int(os.getenv("RAG_CHUNK_SIZE", "1000"))
     chunk_overlap: int = int(os.getenv("RAG_CHUNK_OVERLAP", "200"))
+    chroma_api_key: str | None = os.getenv("CHROMA_API_KEY") or None
+    chroma_tenant: str | None = os.getenv("CHROMA_TENANT") or None
+    chroma_database: str | None = os.getenv("CHROMA_DATABASE") or None
+    chroma_host: str | None = os.getenv("CHROMA_HOST") or None
+
+    @property
+    def use_chroma_cloud(self) -> bool:
+        return bool(self.chroma_api_key)

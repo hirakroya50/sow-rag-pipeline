@@ -31,18 +31,52 @@ def document_id(document: Document, index: int) -> str:
     return f"doc_{digest[:12]}_{index}"
 
 
+def _create_chroma_client(
+    *,
+    persist_directory: str,
+    api_key: str | None = None,
+    tenant: str | None = None,
+    database: str | None = None,
+    cloud_host: str | None = None,
+) -> chromadb.ClientAPI:
+    if api_key:
+        kwargs: dict[str, str] = {"api_key": api_key}
+        if tenant:
+            kwargs["tenant"] = tenant
+        if database:
+            kwargs["database"] = database
+        if cloud_host:
+            kwargs["cloud_host"] = cloud_host
+        logger.info("Connecting to Chroma Cloud database=%s", database or "(auto)")
+        return chromadb.CloudClient(**kwargs)
+
+    Path(persist_directory).mkdir(parents=True, exist_ok=True)
+    logger.info("Using local Chroma at %s", persist_directory)
+    return chromadb.PersistentClient(path=persist_directory)
+
+
 class VectorStore:
-    """Persistent Chroma collection for PDF chunk embeddings."""
+    """Chroma collection for PDF chunk embeddings (local or cloud)."""
 
     def __init__(
         self,
         collection_name: str = "pdf_documents",
         persist_directory: str | Path = "data/vector_store",
+        *,
+        chroma_api_key: str | None = None,
+        chroma_tenant: str | None = None,
+        chroma_database: str | None = None,
+        chroma_host: str | None = None,
     ):
         self.collection_name = collection_name
         self.persist_directory = str(persist_directory)
-        Path(self.persist_directory).mkdir(parents=True, exist_ok=True)
-        self.client = chromadb.PersistentClient(path=self.persist_directory)
+        self.client = _create_chroma_client(
+            persist_directory=self.persist_directory,
+            api_key=chroma_api_key,
+            tenant=chroma_tenant,
+            database=chroma_database,
+            cloud_host=chroma_host,
+        )
         self.collection = self._get_or_create_collection()
         logger.info(
             "Vector store ready. Collection=%s count=%s",

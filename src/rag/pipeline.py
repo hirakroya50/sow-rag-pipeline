@@ -37,6 +37,10 @@ class RAGPipeline:
             self._store = VectorStore(
                 collection_name=self.settings.collection_name,
                 persist_directory=self.settings.vector_dir,
+                chroma_api_key=self.settings.chroma_api_key,
+                chroma_tenant=self.settings.chroma_tenant,
+                chroma_database=self.settings.chroma_database,
+                chroma_host=self.settings.chroma_host,
             )
         return self._store
 
